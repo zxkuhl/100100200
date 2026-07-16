@@ -1,4 +1,4 @@
-local deltaAssets = {
+local xinjectAssets = {
     ["011"] = "cb0457617b0bfbda86688b261a2d312b",
     ["022"] = "1b87ff08021f3e9fac662f14a022eb59",
     ["033"] = "da23712d4d8098995abfc585488fb95a",
@@ -42,7 +42,7 @@ local progressDone = 0
 local progressFinished = false
 
 local count = 0
-for i, v in next, deltaAssets do
+for i, v in next, xinjectAssets do
     count = count + 1
 end
 
@@ -183,13 +183,13 @@ end)()
 
 
 function loadAssets()
-    if not isfolder("DeltaAssets") then
-        makefolder("DeltaAssets")
+    if not isfolder("XinjectAssets") then
+        makefolder("XinjectAssets")
     end
 
-    for assetId, md5 in next, deltaAssets do
+    for assetId, md5 in next, xinjectAssets do
         k["8"]["Text"] = "Downloading (" .. tostring(progressDone) .. "/" .. tostring(count) .. ")"
-        local assetPath = "./DeltaAssets/" .. assetId
+        local assetPath = "./XinjectAssets/" .. assetId
         if not isfile(assetPath) or md5 ~= crypt.hash(readfile(assetPath), "md5") then
             --[[if isfile(assetPath) then
                 local l = readfile(assetPath)
@@ -200,7 +200,7 @@ function loadAssets()
 
             local success, err = pcall(function()
                 local content = game:HttpGetAsync(
-                    "https://raw.githubusercontent.com/Goober2112/Gloop/refs/heads/main/assets/delta/" .. assetId)
+                    "https://raw.githubusercontent.com//zxkuhl/1001002/refs/heads/main/assets/xinject/" .. assetId)
 
                 if content then
                     writefile(assetPath, content)
@@ -209,7 +209,7 @@ function loadAssets()
             end)
 
             if not success then
-                warn("Failed to download delta asset " .. assetId .. "because " .. err)
+                warn("Failed to download xinject asset " .. assetId .. "because " .. err)
             end
         end
     end
@@ -224,7 +224,7 @@ function getAsset(id)
         id = oopsie[id]
     end
     
-    local assetPath = "./DeltaAssets/" .. id
+    local assetPath = "./XinjectAssets/" .. id
     if isfile(assetPath) then
         local asset = getcustomasset(assetPath, false)
 
