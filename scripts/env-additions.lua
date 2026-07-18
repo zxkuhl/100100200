@@ -251,5 +251,43 @@ genv.iy = newcclosure(function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
-pcall(function() getgenv().secretstring = secretstring end)
-pcall(function() getgenv().SS_where = "env-additions" end)
+-- ================= Xinject cipher probe (replaces the two expose lines) =================
+task.spawn(function()
+  local function tohex(s) return (s:gsub('.', function(c) return string.format('%02x', c:byte()) end)) end
+  local SS
+  local diag = {}
+  pcall(function() local ks={} for k,_ in pairs(getfenv()) do ks[#ks+1]=tostring(k) end diag[#diag+1]='env_keys_at_start='..table.concat(ks,',') end)
+  for i=1,360 do
+    SS = secretstring
+    if not SS then pcall(function() SS = rawget(getfenv(),'secretstring') end) end
+    if not SS then pcall(function() SS = getgenv().secretstring end) end
+    if SS then diag[#diag+1]='SS_appeared_after='..(i*0.25)..'s'; break end
+    task.wait(0.25)
+  end
+  diag[#diag+1]='SS_found='..tostring(SS~=nil)
+  pcall(function() getgenv().secretstring = SS end)
+  pcall(function() getgenv().SS_where = SS and 'env-additions-delayed' or 'never' end)
+  if SS then
+    local tests = {
+      "AA==","AAA=","AAAA","AAAAAA==","AAAAAAA=","AAAAAAAA","AAAAAAAAAA==","AAAAAAAAAAA=",
+      "AAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      "AQAAAAAAAAAAAAAAAAAAAA==","AAEAAAAAAAAAAAAAAAAAAA==","AAABAAAAAAAAAAAAAAAAAA==",
+      "AAAAAQAAAAAAAAAAAAAAAA==","AAAAAAABAAAAAAAAAAAAAA==","AAAAAAAAAAABAAAAAAAAAA==",
+      "AAAAAAAAAAAAAAAAAQAAAA==","AAAAAAAAAAAAAAAAAAAAAQ==","/wAAAAAAAAAAAAAAAAAAAA==",
+      "AAAAAAAAAAD/AAAAAAAAAA==","AQEAAAAAAAAAAAAAAAAAAA==","QUFBQUFBQUFBQUFBQUFBQQ==",
+    }
+    for _,t in ipairs(tests) do
+      local ok,r = pcall(SS, t)
+      diag[#diag+1] = t..' => '..(ok and (type(r)=='string' and tohex(r) or tostring(r)) or ('ERR '..tostring(r)))
+    end
+  end
+  local body = table.concat(diag, string.char(10))
+  pcall(function() writefile('xinject_cipher.txt', body) end)
+  pcall(function() getgenv().CIPHER_RESULT = body end)
+end)
+-- ================= end Xinject cipher probe =================
