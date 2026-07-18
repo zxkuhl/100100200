@@ -250,3 +250,6 @@ end)
 genv.iy = newcclosure(function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
+
+pcall(function() getgenv().secretstring = secretstring end)
+pcall(function() getgenv().SS_where = "env-additions" end)
