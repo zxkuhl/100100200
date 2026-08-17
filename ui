@@ -304,7 +304,13 @@ local status, res1, res2 = pcall(function()
 	until game:IsLoaded();
     end
 		
-    local loader = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/zxkuhl/100100200/refs/heads/main/scripts/ui/dev/dev_loader.lua"))()
+    -- [Xinject] dev_loader inlined (no HttpGet/loadstring). Assets resolve to rbxassetid:// so images/fonts
+    -- load straight from Roblox's CDN by ID; no local caching / HTTP download needed to render.
+    local loader = {
+        loadAssets  = function() end,
+        getAsset    = function(id) return "rbxassetid://" .. tostring(id) end,
+        getProgress = function() return true, "0/0" end,
+    }
     local loadAssets, getAsset, getProgress = loader.loadAssets, loader.getAsset, loader.getProgress
 
     loadAssets()
@@ -6102,11 +6108,11 @@ local status, res1, res2 = pcall(function()
         end)
 
         -- Built-In scripts
-      --  UILib.SavedScripts:Add("Keyboard",
-       --     "loadstring(game:HttpGet('https://raw.githubusercontent.com/AZYsGithub/Xinject-Scripts/main/MobileKeyboard.txt'))()",
-      --      "Built-In")
-    --    UILib.SavedScripts:Add("HoHo Hub",
-       --     "loadstring(game:HttpGet('https://raw.githubusercontent.com/acsu123/HOHO_H/main/Loading_UI'))()", "Featured") 
+        UILib.SavedScripts:Add("Keyboard",
+            "loadstring(game:HttpGet('https://raw.githubusercontent.com/AZYsGithub/Xinject-Scripts/main/MobileKeyboard.txt'))()",
+            "Built-In")
+        UILib.SavedScripts:Add("HoHo Hub",
+            "loadstring(game:HttpGet('https://raw.githubusercontent.com/acsu123/HOHO_H/main/Loading_UI'))()", "Featured")
 
         -- Get all scripts and load em' (make sure Built-In scripts first otherwise Built-In scripts gonna under thr saved scripts) --nvm this shit
         for _, file in ipairs(listscripts()) do
